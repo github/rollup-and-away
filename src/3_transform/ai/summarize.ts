@@ -107,6 +107,11 @@ export async function runPrompt(params: PromptParameters): Promise<string> {
 
     return modelResponse;
   } catch (error: unknown) {
+    // @ts-expect-error this is fine
+    if (error.code === "content_filter") {
+      // Return a string instead of an error to avoid breaking the flow
+      return "The content was filtered due to a jailbreak attempt, or harmful content. May be a false positive.";
+    }
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error(
         `Request Timeout. Please try again: ${JSON.stringify(error)}`,
