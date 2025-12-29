@@ -36,6 +36,11 @@ import {
 import { SlackClient, slackLink, SLACK_FOOTER, SLACK_MUTE } from "@push/slack";
 import { matchIssueUrl, scrapeUrls } from "@util/github-url";
 
+type Parent = {
+  title: string;
+  url: string;
+  number: number;
+};
 // Interface
 export type Issue = {
   title: string;
@@ -54,11 +59,7 @@ export type Issue = {
   assignees: string[];
   labels: string[];
   comments?: Array<Comment>;
-  parent?: {
-    title: string;
-    url: string;
-    number: number;
-  };
+  parent?: Parent;
   project?: Project;
   issueFields?: Map<string, IssueFieldValue>;
   isSubissue?: boolean;
@@ -213,11 +214,11 @@ export class IssueWrapper {
     return this.issue.labels.map((label) => label.trim());
   }
 
-  get parentTitle(): string {
+  get parent(): Parent | undefined {
     if (!this.issue.parent) {
-      return "No Parent Issue";
+      return undefined;
     }
-    return this.issue.parent?.title;
+    return this.issue.parent;
   }
 
   // Comments
@@ -262,7 +263,9 @@ export class IssueWrapper {
       case fuzzy("parent"):
       case fuzzy("parent_issue"):
       case fuzzy("parent_title"):
-        return this.parentTitle;
+        return this.parent?.title || "";
+      case fuzzy("parent_url"):
+        return this.parent?.url || "";
     }
 
     // TODO: Labels
