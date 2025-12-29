@@ -14,6 +14,7 @@ export type IssueFetchParameters = {
   projectFields: boolean;
   issueFields: boolean;
   subissues: boolean;
+  followLinks: boolean;
   filter: (issue: IssueWrapper) => boolean;
 };
 
@@ -22,6 +23,7 @@ export type DirtyIssueFetchParameters = {
   projectFields?: unknown;
   issueFields?: unknown;
   subissues?: unknown;
+  followLinks?: unknown;
   filter?: unknown;
   [invalidKey: string]: unknown;
 };
@@ -31,6 +33,7 @@ const validKeys = new Set([
   "projectFields",
   "issueFields",
   "subissues",
+  "followLinks",
   "filter",
 ]);
 
@@ -69,11 +72,23 @@ export function validateFetchParameters(
     subissues = isTruthy(params.subissues);
   }
 
+  let followLinks = false;
+  if (params?.followLinks !== undefined) {
+    followLinks = isTruthy(params.followLinks);
+  }
+
   let filter: (issue: IssueWrapper) => boolean = () => true;
   if (params?.filter !== undefined) {
     // Trust the user to provide a valid function (yikes emoji)
     filter = params.filter as (issue: IssueWrapper) => boolean;
   }
 
-  return { comments, projectFields, issueFields, subissues, filter };
+  return {
+    comments,
+    projectFields,
+    issueFields,
+    subissues,
+    followLinks,
+    filter,
+  };
 }

@@ -46,6 +46,29 @@ function validateUrl(url: string): URL {
   return urlParts;
 }
 
+export function scrapeUrls(
+  blob: string,
+  kinds: string[] = ["issue"],
+): string[] {
+  const urlRegex = /github\.com\/[^\s)'"<>]+/g;
+  const matches = blob.match(urlRegex);
+  if (!matches) {
+    return [];
+  }
+
+  const urls = new Set<string>();
+  for (const match of matches) {
+    if (kinds.includes("issue") && matchIssueUrl(match)) {
+      urls.add(match);
+    } else if (kinds.includes("discussion") && matchDiscussionUrl(match)) {
+      urls.add(match);
+    }
+  }
+
+  // Deduplicate
+  return Array.from(urls);
+}
+
 export function matchRepoTreeUrl(url: string): RepoTreeMatch | undefined {
   // Handle repo path, including /tree subpath
   const urlParts = validateUrl(url);

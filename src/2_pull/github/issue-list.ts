@@ -202,6 +202,31 @@ export class IssueList {
     return await list.fetch(fetchParams);
   }
 
+  static async forUrls(
+    urls: string[],
+    params: IssueFetchParameters,
+  ): Promise<IssueList> {
+    const issues: IssueWrapper[] = [];
+    for (const url of urls) {
+      try {
+        const issue = await IssueWrapper.forUrl(url, params);
+        if (issue) {
+          issues.push(issue);
+        }
+      } catch (error: unknown) {
+        emitWarning(`Could not fetch Issue from URL ${url}: ${error}`);
+      }
+    }
+
+    const list = new IssueList([], {
+      title: `Issues from URLs`,
+      url: `Multiple URLs`,
+    });
+    list.issues = issues;
+
+    return await list.fetch(params);
+  }
+
   // Fetching
   async fetch(params: IssueFetchParameters): Promise<IssueList> {
     if (params.projectFields && this.projectNumber) {

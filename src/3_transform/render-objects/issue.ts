@@ -10,6 +10,7 @@ export type IssueRenderOptions = {
   updatedAt: boolean;
   fields: string[];
   subissues: boolean | undefined;
+  relatedIssues: boolean | undefined;
   skipIfEmpty: boolean; // Skip rendering if no updates or body
 };
 
@@ -26,6 +27,11 @@ export function renderIssue(
   if (options.subissues === undefined) {
     // Render subissues by default if they exist
     options.subissues = issue.subissues !== undefined;
+  }
+
+  if (options.relatedIssues === undefined) {
+    // Render related issues by default if they exist
+    options.relatedIssues = issue.relatedIssues !== undefined;
   }
 
   // Render an IssueWrapper as a Markdown string
@@ -96,6 +102,22 @@ export function renderIssue(
     }
 
     markdown += `---\n\n`; // End Subissues with a horizontal rule
+  }
+
+  if (options.relatedIssues && issue.relatedIssues) {
+    for (const relatedIssue of issue.relatedIssues) {
+      const renderedRelatedIssue = renderIssue(
+        relatedIssue,
+        options,
+        headerLevel + 1,
+      );
+      if (renderedRelatedIssue) {
+        markdown += `${renderedRelatedIssue.markdown}\n\n`;
+        sources.push(...renderedRelatedIssue.sources);
+      }
+    }
+
+    markdown += `---\n\n`; // End Related Issues with a horizontal rule
   }
 
   return {

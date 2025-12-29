@@ -34,6 +34,7 @@ import {
 } from "./graphql";
 
 import { SlackClient, slackLink, SLACK_FOOTER, SLACK_MUTE } from "@push/slack";
+import { matchIssueUrl, scrapeUrls } from "@util/github-url";
 
 // Interface
 export type Issue = {
@@ -68,7 +69,9 @@ export class IssueWrapper {
 
   private issue: Issue;
   private commentList: CommentList | undefined; // Cached property
+
   public subissues: IssueList | undefined;
+  public relatedIssues: IssueList | undefined;
 
   constructor(issue: Issue) {
     this.issue = issue;
@@ -83,6 +86,29 @@ export class IssueWrapper {
     return new IssueWrapper(issue).fetch(fetchParams);
   }
 
+  static async forUrl(
+    url: string,
+    fetchParams: IssueFetchParameters,
+  ): Promise<IssueWrapper> {
+    // Create an IssueWrapper for a specific issue URL
+    const match = matchIssueUrl(url);
+    if (!match) {
+      throw new Error(`Invalid Issue URL: "${url}"`);
+    }
+    const { owner, repo, issueNumber } = match;
+    if (!issueNumber) {
+      throw new Error(`Issue URL is missing Issue number: "${url}"`);
+    }
+    return await IssueWrapper.forIssue(
+      {
+        organization: owner,
+        repository: repo,
+        issueNumber,
+      },
+      fetchParams,
+    );
+  }
+
   async fetch(params: IssueFetchParameters): Promise<IssueWrapper> {
     if (!this.issue.comments && params.comments > 0) {
       const timeframe = UpdateDetection.getInstance().timeframe;
@@ -95,6 +121,10 @@ export class IssueWrapper {
     }
     if (params.subissues) {
       await this.fetchSubissues(params);
+    }
+    if (params.followLinks) {
+      // Follow links within the updates to find linked issues
+      await this.followLinks(params);
     }
     return this;
   }
@@ -438,6 +468,27 @@ export class IssueWrapper {
       await subissues.fetchProjectFields(this.projectNumber);
     }
     this.subissues = subissues;
+  }
+
+  private async followLinks(params: IssueFetchParameters) {
+    if (this.relatedIssues) {
+      return; // Already fetched
+    }
+
+    const update = this.comments.latestUpdate?.update;
+
+    if (update) {
+      const issueUrls = scrapeUrls(update, ["issue"]);
+      if (issueUrls.length === 0) {
+        this.relatedIssues = IssueList.null();
+        return;
+      }
+
+      this.relatedIssues = await IssueList.forUrls(issueUrls, {
+        ...params,
+        subissues: false, // Prevent loops
+      });
+    }
   }
 
   // Slack

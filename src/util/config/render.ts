@@ -17,6 +17,7 @@ export type DirtyRenderOptions = {
   fields?: unknown;
   // TODO: Labels
   subissues?: unknown;
+  relatedIssues?: unknown;
   skipIfEmpty?: unknown; // Skip rendering if no updates or body
   [invalidKey: string]: unknown; // Users can go ballistic, need to handle it
 };
@@ -99,6 +100,11 @@ export function validateRenderOptions(
     subissues = isTruthy(options.subissues);
   }
 
+  let relatedIssues = undefined; // Default: render related issues if they exist
+  if (options.relatedIssues !== undefined) {
+    relatedIssues = isTruthy(options.relatedIssues);
+  }
+
   let skipIfEmpty = true; // Default: skip empty objects
   if (options.skipIfEmpty !== undefined) {
     skipIfEmpty = isTruthy(options.skipIfEmpty);
@@ -113,6 +119,7 @@ export function validateRenderOptions(
     updatedAt,
     fields,
     subissues,
+    relatedIssues,
     skipIfEmpty,
   };
 }
