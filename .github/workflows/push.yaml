@@ -2,6 +2,11 @@ name: 'Weekly Rollup Example'
 on:
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
