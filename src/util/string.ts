@@ -1,9 +1,15 @@
 export function stripHtml(s: string): string {
-  // Remove HTML comments from Markdown - from Liquidjs
-  return s.replace(
-    /<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<.*?>|<!--[\s\S]*?-->/g,
-    "",
-  );
+  // Remove HTML, script/style tags, and comments from Markdown - from Liquidjs
+  // Apply the replacement repeatedly to avoid incomplete multi-character sanitization.
+  const stripRegex =
+    /<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<.*?>|<!--[\s\S]*?-->/g;
+  let previous: string;
+  let current = s;
+  do {
+    previous = current;
+    current = current.replace(stripRegex, "");
+  } while (current !== previous);
+  return current;
 }
 
 export function title(s: string): string {

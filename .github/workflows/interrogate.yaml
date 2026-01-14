@@ -9,6 +9,11 @@ on:
         description: Query to infer about the Issues using the AI model
         required: true
 
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
 jobs:
   interrogate:
     runs-on: ubuntu-latest
