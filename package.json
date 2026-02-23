@@ -36,7 +36,7 @@
     "limiter": "^3.0.0",
     "lodash": "^4.17.21",
     "memoize": "^10.1.0",
-    "minimatch": "10.0.3",
+    "minimatch": "10.2.1",
     "quickchart-js": "^3.1.3",
     "strftime": "^0.10.3",
     "tiktoken": "latest",
